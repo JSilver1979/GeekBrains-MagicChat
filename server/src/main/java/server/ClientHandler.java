@@ -88,6 +88,15 @@ public class ClientHandler {
                                 }
                                 server.privateMsg(this, token[1], token[2]);
                             }
+                            if (str.startsWith("/cn")) {
+                                String[] token = str.split(" ", 3);
+                                if (token.length <3) {
+                                    continue;
+                                }
+                                if (server.getAuthService().changeNickName(token[1], token[2])) {
+                                    sendMsg("/reg_ok");
+                                } else { sendMsg("/reg_no");}
+                            }
 
                         } else {
                             server.broadcastMsg(this, str);

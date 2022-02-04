@@ -13,4 +13,6 @@ public interface AuthService {
      * иначе вернет false
      * */
     boolean registration(String login, String password, String nickname);
+
+    boolean changeNickName(String nickname, String login);
 }
