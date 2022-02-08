@@ -22,6 +22,7 @@ import service.ServiceMessages;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
@@ -99,6 +100,7 @@ public class Controller implements Initializable {
             out = new DataOutputStream(socket.getOutputStream());
 
             new Thread(() -> {
+                FileWriter writeChatHistory = null;
                 try {
                     //цикл аутентификации
                     while (true) {
@@ -111,6 +113,8 @@ public class Controller implements Initializable {
                             if (str.startsWith(ServiceMessages.AUTH_OK)) {
                                 nickname = str.split(" ")[1];
                                 setAuthenticated(true);
+                                ChatHistory.createFile(loginField.getText().trim());
+                                textArea.appendText(ChatHistory.readHistory());
                                 break;
                             }
                             if (str.startsWith("/reg")) {
@@ -124,6 +128,7 @@ public class Controller implements Initializable {
 
 
                     //цикл работы
+                    writeChatHistory = ChatHistory.writeHistory();
                     while (authenticated) {
                         String str = in.readUTF();
 
@@ -144,6 +149,7 @@ public class Controller implements Initializable {
 
                         } else {
                             textArea.appendText(str + "\n");
+                            writeChatHistory.write(str + "\n");
                         }
                     }
                 } catch (IOException e) {
@@ -153,6 +159,13 @@ public class Controller implements Initializable {
                         socket.close();
                     } catch (IOException e) {
                         e.printStackTrace();
+                    }
+                    if (writeChatHistory != null) {
+                        try {
+                            writeChatHistory.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
 
