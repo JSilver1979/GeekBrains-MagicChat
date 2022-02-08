@@ -1,13 +1,12 @@
 package server;
 
-import org.omg.CORBA.PUBLIC_MEMBER;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.*;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -20,11 +19,15 @@ public class Server {
     private List<ClientHandler> clients;
     private AuthService authService;
 
+    private Connection connection;
+    private Statement stmt;
+
     public Server() {
         clients = new CopyOnWriteArrayList<>();
-        authService = new SimpleAuthService();
-
+//        authService = new SimpleAuthService();
         try {
+            connectDB();
+            authService = new AuthDBService(connection, stmt);
             server = new ServerSocket(PORT);
             System.out.println("Server started!");
 
@@ -36,6 +39,7 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
+            disconnectDB();
             System.out.println("Server stop");
             try {
                 server.close();
@@ -101,5 +105,26 @@ public class Server {
 
     public AuthService getAuthService() {
         return authService;
+    }
+
+    public void connectDB() {
+        try {
+            Class.forName("org.sqlite.JDBC");
+            connection = DriverManager.getConnection("jdbc:sqlite:auth.db");
+            stmt = connection.createStatement();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void disconnectDB() {
+        try {
+            if (stmt != null) {stmt.close();}
+        } catch (Exception e) {e.printStackTrace();}
+        try {
+            if (connection != null) {
+                connection.close();
+            }
+        } catch (Exception e) {e.printStackTrace();}
     }
 }
